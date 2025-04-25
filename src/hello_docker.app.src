@@ -1,0 +1,14 @@
+{application, hello_docker,
+ [
+  {description, "Hello World Docker Service"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {hello_docker_app, []}},
+  {applications, [
+    kernel,
+    stdlib,
+    cowboy
+  ]},
+  {env, []},
+  {modules, [hello_docker_app, hello_docker_sup]}
+ ]}.

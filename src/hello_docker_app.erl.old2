@@ -1,0 +1,41 @@
+-module(hello_docker_app).
+-behaviour(application).
+
+-export([start/2, stop/1]).
+
+start(_Type, _Args) ->
+    hello_docker_sup:start_link().  % Supervisor handles Cowboy initialization
+
+stop(_State) -> ok.
+
+-module(hello_docker_sup).
+-behaviour(supervisor).
+
+-export([start_link/0, init/1]).
+
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
+init(_Args) ->
+    Dispatch = cowboy_router:compile([
+        {'_', [
+            {"/", hello_handler, []}
+        ]}
+    ]),
+    
+    TransportOpts = [
+        {port, 8080},
+        {num_acceptors, 100}  % Added for better connection handling
+    ],
+    
+    ProtoOpts = #{
+        env => #{dispatch => Dispatch}
+    },
+    
+    ChildSpecs = [
+        #{id       => cowboy_http,
+          start    => {cowboy, start_clear, [http_listener, TransportOpts, ProtoOpts]},
+          restart  => permanent}
+    ],
+    
+    {ok, {#{strategy => one_for_one}, ChildSpecs}}.
